@@ -8,5 +8,9 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Origen del frontend (Vite) permitido para CORS con cookies de sesión
+    # Origen(es) del frontend permitidos para CORS con cookies de sesión.
     FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "http://localhost:5173")
+
+    # Necesario para que la cookie de sesión viaje entre dominios distintos debido a inicio de sesión con cookies
+    SESSION_COOKIE_SAMESITE = "None"
+    SESSION_COOKIE_SECURE = FRONTEND_ORIGIN.startswith("https")
