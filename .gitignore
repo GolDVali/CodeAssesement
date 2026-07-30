@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Base de datos local (SQLite)
+instance/
+
+# Variables de entorno
+.env
+
+# Node (si acaso el explorador está en la raíz)
+node_modules/
+
+# Editor
+.vscode/
+.DS_Store
