@@ -122,9 +122,6 @@ def cancelar_gasto(id_gasto):
     if gasto.estado == "pagado":
         return jsonify({"error": "No se puede cancelar un gasto ya pagado"}), 400
 
-    # Se marca como cancelado en lugar de borrarlo: borrar el registro
-    # rompería la integridad referencial con los pagos existentes y haría
-    # imposible aplicar la regla "gastos cancelados no se reactivan".
     gasto.estado = "cancelado"
     db.session.commit()
     return jsonify({"mensaje": "Gasto cancelado con exito", "id": gasto.id_gasto, "estado": gasto.estado})
@@ -257,11 +254,18 @@ def crear_pago():
         gasto.estado = "pagado"
 
     if data["tipo"] == "automatico":
+        #convierte el texto de la fecha en un tipo date
+        fecha_inicio_raw = data.get("fecha_inicio")
+        if fecha_inicio_raw:
+            fecha_inicio = date.fromisoformat(fecha_inicio_raw)
+        else:
+            fecha_inicio = date.today()
+
         nuevo_auto = PagoAutomatico(
             intervalo=data["intervalo"],
             monto=monto,
             estado="activo",
-            fecha_inicio=data.get("fecha_inicio", date.today()),
+            fecha_inicio=fecha_inicio,
             id_gasto=gasto.id_gasto
         )
         db.session.add(nuevo_auto)
