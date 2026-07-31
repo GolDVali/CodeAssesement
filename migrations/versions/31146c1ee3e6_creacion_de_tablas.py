@@ -49,7 +49,7 @@ def upgrade():
     sa.Column('fecha_pago', sa.Date(), nullable=False),
     sa.Column('monto', sa.Numeric(precision=12, scale=2), nullable=False),
     sa.Column('estado', sa.String(length=50), nullable=False),
-    sa.Column('tipo', sa.Enum('manual', 'automatico'), nullable=False),
+    sa.Column('tipo', sa.Enum('manual', 'automatico', name='tipo_pago'), nullable=False),
     sa.Column('id_gasto', sa.Integer(), nullable=False),
     sa.Column('id_cuenta', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['id_cuenta'], ['cuenta.id_cuenta'], ),

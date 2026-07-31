@@ -48,7 +48,7 @@ class Pago(db.Model):
     fecha_pago = db.Column(db.Date, nullable=False)
     monto = db.Column(db.Numeric(12,2), nullable=False)
     estado = db.Column(db.String(50), nullable=False)
-    tipo = db.Column(db.Enum('manual', 'automatico'), nullable=False)
+    tipo = db.Column(db.Enum('manual', 'automatico', name='tipo_pago'), nullable=False)
 
     id_gasto = db.Column(db.Integer, db.ForeignKey('gasto.id_gasto'), nullable=False)
     id_cuenta = db.Column(db.Integer, db.ForeignKey('cuenta.id_cuenta'), nullable=False)
