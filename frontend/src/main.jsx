@@ -9,24 +9,26 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  Filler,
   Tooltip,
   Legend,
 } from 'chart.js'
 
-// Chart.js v4 requiere registrar explícitamente cada elemento/escala que
-// se va a usar (ArcElement para el Pie, CategoryScale/LinearScale/
-// PointElement/LineElement para el Line). Sin esto, react-chartjs-2 falla
-// con errores como "arc is not a registered element" o
-// "category is not a registered scale".
+// Chart.js v4 requiere registrar explícitamente cada elemento/escala usado
 ChartJS.register(
   ArcElement,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
+  Filler,
   Tooltip,
   Legend
 )
+
+// Apariencia global de las gráficas
+ChartJS.defaults.font.family = '"Inter", system-ui, sans-serif'
+ChartJS.defaults.color = '#64748b'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

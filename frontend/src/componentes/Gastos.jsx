@@ -1,88 +1,113 @@
-import { useEffect, useState } from "react";
-import { getGastos, deleteGasto, autorizarGasto } from "../services/api.js";
 import { useNavigate } from "react-router-dom";
+import { deleteGasto, autorizarGasto } from "../services/api.js";
+import { moneda, fechaCorta } from "../utils/formato";
+import Badge from "./Badge";
+import Vacio from "./Vacio";
 
-function Gastos({ usuario }) {
-  const [gastos, setGastos] = useState([]);
+function Gastos({ gastos, usuario, onActualizar }) {
   const navigate = useNavigate();
+  const esAdmin = usuario?.rol === "admin";
 
-  const cargarGastos = () => {
-    getGastos()
-      .then(res => setGastos(res.data))
-      .catch(err => console.error("Error cargando gastos:", err));
-  };
-
-  useEffect(() => {
-    cargarGastos();
-  }, []);
-
-  const handleDelete = async (id) => {
+  const handleCancelar = async (g) => {
+    if (!window.confirm(`¿Cancelar el gasto "${g.nombre}"? Esta acción no se puede revertir.`)) return;
     try {
-      await deleteGasto(id);
-      cargarGastos();
+      await deleteGasto(g.id);
+      onActualizar({ tipo: "ok", texto: `Gasto "${g.nombre}" cancelado.` });
     } catch (err) {
-      console.error("Error eliminando gasto:", err);
+      onActualizar({ tipo: "error", texto: err.response?.data?.error || "No se pudo cancelar el gasto." });
     }
   };
 
-  const handleAutorizar = async (id) => {
+  const handleAutorizar = async (g) => {
     try {
-      await autorizarGasto(id);
-      cargarGastos();
+      await autorizarGasto(g.id);
+      onActualizar({ tipo: "ok", texto: `Gasto "${g.nombre}" autorizado.` });
     } catch (err) {
-      console.error("Error autorizando gasto:", err);
+      onActualizar({ tipo: "error", texto: err.response?.data?.error || "No se pudo autorizar el gasto." });
     }
   };
 
   return (
-    <div>
-      <h2>Gastos</h2>
-      {/* Botón para registrar nuevo gasto */}
-      <button
-        className="btn btn-primary mb-3"
-        onClick={() => navigate("/gasto/nuevo")}
-      >
-        Registrar nuevo gasto
-      </button>
+    <section className="card">
+      <div className="card-head">
+        <h2>Gastos</h2>
+        <span className="count">{gastos.length}</span>
+      </div>
 
-      <ul>
-        {gastos.map(g => (
-          <li key={g.id}>
-            {g.nombre} - ${g.monto} ({g.estado})
-
-            {/* Cancelar solo tiene sentido mientras el gasto no esté pagado ni ya cancelado */}
-            {g.estado !== "pagado" && g.estado !== "cancelado" && (
-              <button
-                className="btn btn-danger btn-sm ms-2"
-                onClick={() => handleDelete(g.id)}
-              >
-                Cancelar
-              </button>
-            )}
-
-            {/* Si está autorizado y no pagado → generar pago */}
-            {g.estado === "autorizado" && (
-              <button
-                className="btn btn-success btn-sm ms-2"
-                onClick={() => navigate(`/pago/nuevo/${g.id}`)}
-              >
-                Generar Pago
-              </button>
-            )}
-
-            {/* Si el usuario es admin y el gasto está pendiente → autorizar */}
-            {usuario?.rol === "admin" && g.estado === "pendiente" && (
-              <button
-                className="btn btn-info btn-sm ms-2"
-                onClick={() => handleAutorizar(g.id)}
-              >
-                Autorizar
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
-    </div>
+      {gastos.length === 0 ? (
+        <Vacio titulo="Aún no hay gastos" texto="Registra tu primer gasto para comenzar el flujo de aprobación y pago.">
+          <button className="btn btn-primary btn-sm" onClick={() => navigate("/gasto/nuevo")}>
+            Nuevo gasto
+          </button>
+        </Vacio>
+      ) : (
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Gasto</th>
+                <th className="num">Monto</th>
+                <th>Pagado</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {gastos.map((g) => {
+                const pct = g.monto ? Math.min(100, (g.pagado / g.monto) * 100) : 0;
+                return (
+                  <tr key={g.id}>
+                    <td className="td-title">
+                      <div className="cell-main">{g.nombre}</div>
+                      <div className="cell-sub">
+                        {g.usuario} · {fechaCorta(g.fecha_creacion)}
+                      </div>
+                    </td>
+                    <td className="num cell-main" data-label="Monto">{moneda(g.monto)}</td>
+                    <td data-label="Pagado">
+                      {g.estado === "cancelado" ? (
+                        <span className="muted">—</span>
+                      ) : (
+                        <div className="cell-progress">
+                          <div className="progress">
+                            <span style={{ width: `${pct}%` }} />
+                          </div>
+                          <div className="progress-label">
+                            {moneda(g.pagado)} · {Math.round(pct)}%
+                          </div>
+                        </div>
+                      )}
+                    </td>
+                    <td data-label="Estado">
+                      <Badge valor={g.estado} />
+                    </td>
+                    <td className="td-actions">
+                      <div className="row-actions">
+                        {g.estado === "pendiente" && esAdmin && (
+                          <button className="btn btn-primary btn-sm" onClick={() => handleAutorizar(g)}>
+                            Autorizar
+                          </button>
+                        )}
+                        {g.estado === "autorizado" && (
+                          <button className="btn btn-success btn-sm" onClick={() => navigate(`/pago/nuevo/${g.id}`)}>
+                            Pagar
+                          </button>
+                        )}
+                        {(g.estado === "pendiente" || g.estado === "autorizado") && (
+                          <button className="btn btn-danger-ghost btn-sm" onClick={() => handleCancelar(g)}>
+                            Cancelar
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
 

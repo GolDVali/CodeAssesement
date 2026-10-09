@@ -21,6 +21,10 @@ def index():
 def crear_usuario():
     data = request.get_json()
 
+    # Evita el error 500 por violar la restricción UNIQUE del correo
+    if Usuario.query.filter_by(correo=data["correo"]).first():
+        return jsonify({"error": "El correo ya está registrado"}), 409
+
     nuevo_usuario = Usuario(
         nombre=data["nombre"],
         rol=data["rol"],
@@ -122,6 +126,9 @@ def cancelar_gasto(id_gasto):
     if gasto.estado == "pagado":
         return jsonify({"error": "No se puede cancelar un gasto ya pagado"}), 400
 
+    # Se marca como cancelado en lugar de borrarlo: borrar el registro
+    # rompería la integridad referencial con los pagos existentes y haría
+    # imposible aplicar la regla "gastos cancelados no se reactivan".
     gasto.estado = "cancelado"
     db.session.commit()
     return jsonify({"mensaje": "Gasto cancelado con exito", "id": gasto.id_gasto, "estado": gasto.estado})
@@ -254,18 +261,11 @@ def crear_pago():
         gasto.estado = "pagado"
 
     if data["tipo"] == "automatico":
-        #convierte el texto de la fecha en un tipo date
-        fecha_inicio_raw = data.get("fecha_inicio")
-        if fecha_inicio_raw:
-            fecha_inicio = date.fromisoformat(fecha_inicio_raw)
-        else:
-            fecha_inicio = date.today()
-
         nuevo_auto = PagoAutomatico(
             intervalo=data["intervalo"],
             monto=monto,
             estado="activo",
-            fecha_inicio=fecha_inicio,
+            fecha_inicio=(date.fromisoformat(data["fecha_inicio"]) if data.get("fecha_inicio") else date.today()),
             id_gasto=gasto.id_gasto
         )
         db.session.add(nuevo_auto)

@@ -1,11 +1,19 @@
+import Layout from "../componentes/Layout";
 import GastoForm from "../componentes/GastoForm";
 
 function NuevoGastoPage() {
   return (
-    <div className="container mt-5">
-      <h2>Registrar nuevo gasto</h2>
-      <GastoForm />
-    </div>
+    <Layout
+      titulo="Nuevo gasto"
+      subtitulo="Registra un gasto para iniciar su flujo de aprobación."
+      volver="/dashboard"
+    >
+      <div className="card form-card">
+        <div className="card-body">
+          <GastoForm />
+        </div>
+      </div>
+    </Layout>
   );
 }
 

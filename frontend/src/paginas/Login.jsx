@@ -1,56 +1,74 @@
 import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { login } from "../services/api";
-import { Link } from "react-router-dom";
+import AuthShell from "../componentes/AuthShell";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [cargando, setCargando] = useState(false);
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setCargando(true);
     try {
       // Backend espera "correo" y "passw"
       await login({ correo: email, passw: password });
-      window.location.href = "/dashboard"; 
+      // Recarga completa para que la app lea el usuario recién guardado
+      window.location.href = "/dashboard";
     } catch (err) {
-      setError("Credenciales inválidas");
+      setError("Correo o contraseña incorrectos");
+      setCargando(false);
     }
   };
 
   return (
-    <div className="container mt-5">
-      <h2>Iniciar sesión</h2>
+    <AuthShell
+      titulo="Bienvenido de nuevo"
+      subtitulo="Inicia sesión para administrar tus gastos y pagos."
+      pie={
+        <>
+          ¿No tienes cuenta? <Link to="/register">Regístrate aquí</Link>
+        </>
+      }
+    >
+      {location.state?.registrado && (
+        <div className="alert alert-ok">Cuenta creada. Ya puedes iniciar sesión.</div>
+      )}
       <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label>Email</label>
+        <div className="field">
+          <label htmlFor="email">Correo electrónico</label>
           <input
+            id="email"
             type="email"
-            className="form-control"
+            className="input"
+            placeholder="tu@empresa.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
-        <div className="mb-3">
-          <label>Contraseña</label>
+        <div className="field">
+          <label htmlFor="password">Contraseña</label>
           <input
+            id="password"
             type="password"
-            className="form-control"
+            className="input"
+            placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
         </div>
-        {error && <div className="alert alert-danger">{error}</div>}
-        <button type="submit" className="btn btn-primary">
-          Entrar
+        {error && <div className="alert alert-error">{error}</div>}
+        <button type="submit" className="btn btn-primary btn-block" disabled={cargando}>
+          {cargando ? "Entrando..." : "Iniciar sesión"}
         </button>
       </form>
-      <p className="mt-3">
-        ¿No tienes cuenta? <Link to="/register">Regístrate aquí</Link>
-      </p>
-    </div>
+    </AuthShell>
   );
 }
 

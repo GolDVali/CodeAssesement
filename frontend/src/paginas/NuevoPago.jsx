@@ -1,14 +1,22 @@
-import PagoForm from "../componentes/PagoForm";
 import { useParams } from "react-router-dom";
+import Layout from "../componentes/Layout";
+import PagoForm from "../componentes/PagoForm";
 
 function NuevoPagoPage() {
   const { gastoId } = useParams();
 
   return (
-    <div className="container mt-5">
-      <h2>Registrar nuevo pago</h2>
-      <PagoForm gastoId={gastoId} />
-    </div>
+    <Layout
+      titulo="Registrar pago"
+      subtitulo="Paga el gasto completo o una parte de él desde una de tus cuentas."
+      volver="/dashboard"
+    >
+      <div className="card form-card">
+        <div className="card-body">
+          <PagoForm gastoId={gastoId} />
+        </div>
+      </div>
+    </Layout>
   );
 }
 
