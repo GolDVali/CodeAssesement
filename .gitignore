@@ -1,3 +1,6 @@
+# Entorno virtual
+venv/
+
 # Python
 __pycache__/
 *.pyc
@@ -9,7 +12,7 @@ instance/
 # Variables de entorno
 .env
 
-# Node (si acaso el explorador está en la raíz)
+# Node
 node_modules/
 
 # Editor
